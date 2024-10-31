@@ -1,6 +1,3 @@
-cd C:\
 
-cc65\bin\ca65 -v C:\Users\Guernsey\Documents\Code\Kanpainiki-NES\test.s -o C:\Users\Guernsey\Documents\Code\Kanpainiki-NES\test.o -t nes
-cc65\bin\ld65 -v C:\Users\Guernsey\Documents\Code\Kanpainiki-NES\test.o -o C:\Users\Guernsey\Documents\Code\Kanpainiki-NES\test.nes -t nes
-
-cd C:\Users\Guernsey\Documents\Code\Kanpainiki-NES\
+C:\cc65\bin\ca65 -v code.asm -o game.o -t nes
+C:\cc65\bin\ld65 -v game.o -o game.nes -t nes

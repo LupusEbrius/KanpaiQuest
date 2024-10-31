@@ -9,7 +9,7 @@
 
 ;0000 0000
 SPRITE:
-    ;Y POS, SPRITE ADD, ATTR, X POS
+    ;Y POS, SPRITE ADDRESS, ATTR, X POS
     .byte $40, $10, $0B, $40
     .byte $40, $11, $0B, $48
     .byte $48, $12, $00, $48
