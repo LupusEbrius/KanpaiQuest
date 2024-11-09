@@ -35,8 +35,47 @@ BUTTON_LEFT   = 1 << 1
 BUTTON_RIGHT  = 1 << 0
 
 .scope Controller
+    down    = $21     ; Button "down" bitmaks, 1 means down & 0 means up.
+    pressed = $22     ; Button "pressed" bitmask, 1 means pressed this frame.
+    downTiles = $600  ; Holds tile values for the controlller state in the BG
+
     .proc update
-      
+        lda #$01
+        ; While the strobe bit is set, buttons will be continuously reloaded.
+        ; This means that reading from JOYPAD1 will only return the state of the
+        ; first button: button A.
+        sta JOYPAD1
+        sta buttons
+        lsr a        ; now A is 0
+        ; By storing 0 into JOYPAD1, the strobe bit is cleared and the reloading stops.
+        ; This allows all 8 buttons (newly reloaded) to be read from JOYPAD1.
+        sta JOYPAD1
+    loop:
+        lda JOYPAD1
+        lsr a        ; bit 0 -> Carry
+        rol buttons  ; Carry -> bit 0; bit 7 -> Carry
+        bcc loop
+        rts
+    .endproc
+
+    .proc read_joypad1
+        lda down
+        tay
+        lda #1
+        sta JOYPAD1
+        sta down
+        lsr
+        sta JOYPAD1
+      @loop:
+        lda JOYPAD1
+        lsr
+        rol down
+        bcc @loop
+        tya
+        eor down
+        and down
+        sta pressed
+        rts
     .endproc
 .endscope
 

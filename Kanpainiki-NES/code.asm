@@ -7,6 +7,8 @@
     .byte $00, $00, $00, $00, $00
 
 .segment "ZEROPAGE"
+    buttons: .res 1
+    sprite_num: .res 1
 
 .segment "VECTORS"
     .addr nmi
@@ -19,7 +21,9 @@
     .include "./graphics/palette.s"
     .include "./graphics/small-sprite.s"
     .include "./STATE/ppu.asm"
+    .include "controller.asm"
     .include "./STATE/player.asm"
+    .include "./STATE/brick.s"
     .include "./STATE/game.asm"
 
     .proc reset
@@ -120,7 +124,7 @@
         ; Initialize the game state
         jsr Game::init
         jsr Player::init
-
+        ; jsr Brick::Sprite::spawn_bricks
         ; Enable rendering and NMI
         lda #%10010000
         sta PPU_CTRL
@@ -133,9 +137,13 @@
     ; Main game loop logic that runs every tick
     ;-------------------------------------------------------------------------------
     .proc game_loop
-        ; jsr Joypad::update
-        ; jsr Player::Movement::update
-        ; jsr Player::Sprite::update
+        ; jsr Game::draw_start_screen
+        ; jsr Controller::read_joypad1
+        jsr Controller::read_joypad1
+        jsr Player::Movement::update
+        jsr Player::Attack::update
+        jsr Player::Sprite::update
+
         rts
     .endproc
 
