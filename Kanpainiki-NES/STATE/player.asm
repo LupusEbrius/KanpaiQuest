@@ -468,9 +468,8 @@
             ; Create a Brick Sprite that moves in a straight line until address $000F
             ; has a non Zero value for every time player presses A
             @spawn_brick: 
-                clc
-                adc #1
-                sta ProjectileNum
+                inc ProjectileNum
+                lda ProjectileNum
                 tay
                 dey
                 ldx #04

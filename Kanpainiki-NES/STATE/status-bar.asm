@@ -14,31 +14,38 @@
         rts
     .endproc
 
+    .proc update
+        jsr count_down
+        ; jsr display_timer
+        rts
+    .endproc
+
     .proc count_down
+        dec FRAMECOUNTER
         ldx FRAMECOUNTER
-        dex
         cpx #00
         bne save
         ldx #60
+        stx FRAMECOUNTER
+        dec SECONDCOUNTER
         ldy SECONDCOUNTER
-        dey
         cpy #00
-        bne save:
+        bne save
         ldy #60
-        lda MINUTECOUTER
-        dec
+        sty SECONDCOUNTER
+        dec MINUTECOUTER
         cpy #00
         beq end_game
         end_game:
-            jsr win_screen
+            LDA #1
+            STA $AC
             rts
         save:
-        stx FRAMECOUNTER
-        sty SECONDCOUNTER
-
+        rts
     .endproc
 
     .proc display_timer
+
     .endproc
 
     .proc display_health

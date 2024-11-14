@@ -25,7 +25,7 @@
     sta PPU_ADDR
     lda #$00
     sta PPU_ADDR
-    lda #$01
+    lda #$0F
     sta PPU_DATA
     ldx #0
     rts
@@ -59,6 +59,133 @@
   .endproc
   
   .proc draw_start_screen
+    VramColRow 0, 0, NAMETABLE_B
+   
+
+    TOPBLANK:
+      lda #$45
+      jsr ppu_full_line
+      jsr ppu_full_line
+      jsr ppu_full_line
+      jsr ppu_full_line
+      
+    ldx #$00
+    loop:
+      lda KANPAI, x
+      sta PPU_DATA
+      inx
+      cpx #160
+      bne loop
+
+    lda #$45
+    jsr ppu_full_line
+    jsr ppu_full_line
+    ldx #$00
+    questloop:
+      lda QUEST, x
+      sta PPU_DATA
+      inx
+      cpx #160
+      bne questloop
+
+    lda #$45
+    jsr ppu_full_line
+
+    ; GET SMASHED GET BRICKED
+    LDX #00
+    splashloop:
+      lda SPLASHTEXT, x
+      sta PPU_DATA
+      inx
+      cpx #32
+      bne splashloop
+    
+    
+    lda #$45
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    ;jsr ppu_full_line
+    ldx #24
+    jsr ppu_fill_line
+    lda #$30
+    ldx #6
+    jsr ppu_fill_line
+    lda #$45
+    ldx #2
+    jsr ppu_fill_line
+
+    ldx #$00
+    logoloop:
+      lda LOGOS, x
+      sta PPU_DATA
+      inx
+      cpx #96
+      bne logoloop
+    ; BLANK SPACE
+    BOTTOMBLANKBF:
+      lda #$45
+      jsr ppu_full_line
+      jsr ppu_full_line
+
+
+    ; LOAD ATTRIBUTES
+    lda PPU_STATUS
+    ldx #00
+    attributeloop:
+      lda attribute, x 
+      sta PPU_DATA
+      inx
+      cpx #64
+      bne attributeloop
+    rts
+    KANPAI:	
+      .byte $08,$08,$2B,$09,$08,$1D,$1A,$0E,$1D,$09,$09,$1C,$0B,$18,$0C,$08
+      .byte $09,$0A,$09,$09,$09,$18,$0C,$1D,$09,$09,$1C,$08,$09,$2C,$08,$08
+      .byte $08,$08,$2B,$09,$1D,$1A,$0E,$08,$09,$2C,$2B,$09,$0B,$09,$18,$0C
+      .byte $09,$0A,$09,$2C,$08,$09,$0A,$09,$2C,$2B,$09,$08,$09,$2C,$08,$08
+      .byte $08,$08,$2B,$09,$09,$2A,$08,$08,$09,$09,$09,$09,$0B,$09,$1B,$18
+      .byte $09,$0A,$09,$2C,$08,$09,$0A,$09,$09,$09,$09,$08,$09,$2C,$08,$08
+      .byte $08,$08,$2B,$09,$1F,$18,$0C,$08,$09,$2C,$2B,$09,$0B,$09,$0F,$1B
+      .byte $09,$0A,$09,$09,$09,$1A,$0E,$09,$2C,$2B,$09,$08,$09,$2C,$08,$08
+      .byte $08,$08,$2B,$09,$08,$1F,$18,$0C,$09,$2C,$2B,$09,$0B,$09,$08,$0F
+      .byte $1B,$0A,$09,$2C,$08,$08,$08,$09,$2C,$2B,$09,$08,$09,$2C,$08,$08
+    QUEST:
+      .byte $08,$08,$08,$08,$08,$1D,$09,$09,$1C,$0B,$0A,$08,$0B,$0A,$1D,$09
+      .byte $09,$1E,$1D,$09,$09,$1C,$1F,$09,$09,$09,$1E,$08,$08,$08,$08,$08
+      .byte $08,$08,$08,$08,$08,$09,$08,$08,$09,$0B,$0A,$08,$0B,$0A,$09,$08
+      .byte $08,$08,$09,$08,$08,$08,$08,$08,$09,$08,$08,$08,$08,$08,$08,$08
+      .byte $08,$08,$08,$08,$08,$09,$08,$08,$09,$0B,$0A,$08,$0B,$0A,$09,$09
+      .byte $09,$08,$1F,$09,$09,$1C,$08,$08,$09,$08,$08,$08,$08,$08,$08,$08
+      .byte $08,$08,$08,$08,$08,$09,$08,$1C,$09,$0B,$0A,$08,$0B,$0A,$09,$08
+      .byte $08,$08,$08,$08,$08,$09,$08,$08,$09,$08,$08,$08,$08,$08,$08,$08
+      .byte $08,$08,$08,$08,$08,$1F,$09,$09,$28,$0F,$1B,$09,$1A,$0E,$1F,$09
+      .byte $09,$1C,$1F,$09,$09,$1E,$08,$08,$09,$08,$08,$08,$08,$08,$08,$08
+    SPLASHTEXT:
+    	.byte $08,$08,$08,$08,$60,$41,$65,$08,$50,$47,$42,$50,$40,$41,$61,$08
+	    .byte $08,$60,$41,$65,$08,$62,$53,$46,$51,$63,$41,$61,$08,$08,$08,$08
+    LOGOS:
+      .byte $08,$08,$08,$08,$08,$1F,$1C,$08,$08,$08,$08,$08,$2D,$08,$50,$65
+      .byte $42,$53,$65,$08,$08,$08,$08,$08,$30,$3B,$4C,$4D,$3A,$30,$08,$08
+      .byte $08,$08,$08,$08,$08,$1D,$1E,$08,$08,$08,$08,$08,$08,$08,$08,$08
+      .byte $08,$08,$08,$08,$08,$08,$08,$08,$30,$3C,$3D,$3E,$3F,$30,$08,$08
+      .byte $08,$08,$08,$1D,$1E,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08
+      .byte $08,$08,$08,$08,$08,$08,$08,$08,$30,$39,$4E,$4F,$38,$30,$08,$08
+    attribute:
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %11111111, %00110011
+      .byte %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000
+  .endproc
+  
+  .proc draw_game_screen
     VramColRow 0, 23, NAMETABLE_A
     lda #$45
     jsr ppu_full_line
@@ -126,8 +253,64 @@
   .endproc
 
   .proc draw_win_screen
+    VramColRow 0, 0, NAMETABLE_B
+    lda #$45
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    ; jsr ppu_full_line
+    ; jsr ppu_full_line
+    VramReset
+    rts
+  .endproc
 
+  .proc check_state
+    lda $AC
+    cmp #0
+    beq game
+    cmp #1
+    beq win
+    cmp #2
+    beq lose
+    ; else
+    start:
+    
+      rts
+    game:
+    
+      rts
+    win:
 
+      rts
+    lose:
+
+      rts
   .endproc
 
 .endscope

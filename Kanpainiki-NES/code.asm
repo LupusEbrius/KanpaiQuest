@@ -23,8 +23,10 @@
     .include "./STATE/ppu.asm"
     .include "controller.asm"
     .include "./STATE/player.asm"
-    .include "./STATE/brick.s"
+    ; .include "./STATE/brick.s"
     .include "./STATE/game.asm"
+    .include "./STATE/status-bar.asm"
+    .include "./STATE/start_screen.asm"
 
     .proc reset
         sei     ;disables interupts
@@ -124,7 +126,7 @@
         ; Initialize the game state
         jsr Game::init
         jsr Player::init
-        ; jsr Brick::Sprite::spawn_bricks
+        jsr StatusBar::init_timer
         ; Enable rendering and NMI
         lda #%10010000
         sta PPU_CTRL
@@ -139,10 +141,32 @@
     .proc game_loop
         ; jsr Game::draw_start_screen
         ; jsr Controller::read_joypad1
+
+        lda $AC
+        cmp #1
+        ;cmp #%10000000
+        beq change_state
+        ; beq end_game
+
+        change_state:
+            ; Turn off Changed Bit
+            ; Check other bits for State
+            ; Update Screens
+        
+        check_state:
+            ; Check bits for which routine to run
+        MENU:
+
+        GAME:
+        jsr StatusBar::update
         jsr Controller::read_joypad1
         jsr Player::Movement::update
         jsr Player::Attack::update
         jsr Player::Sprite::update
+        rts
+        end_game:
+            jsr Game::draw_win_screen
+        END:
 
         rts
     .endproc
