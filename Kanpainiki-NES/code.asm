@@ -125,6 +125,7 @@
     .proc init_game
         ; Initialize the game state
         jsr Game::init
+        jsr Game::draw_start_screen
         jsr Player::init
         jsr StatusBar::init_timer
         ; Enable rendering and NMI
@@ -140,37 +141,140 @@
     ;-------------------------------------------------------------------------------
     .proc game_loop
         ; jsr Game::draw_start_screen
-        ; jsr Controller::read_joypad1
+        jsr Controller::read_joypad1
 
         lda $AC
-        cmp #1
-        ;cmp #%10000000
-        beq change_state
-        ; beq end_game
+        ;cmp #1
+        and #%10000000
+        cmp #%10000000
+        beq changed_state
 
-        change_state:
-            ; Turn off Changed Bit
-            ; Check other bits for State
-            ; Update Screens
-        
         check_state:
             ; Check bits for which routine to run
-        MENU:
-
+            lda $AC
+            cmp #%00000001
+            beq GAME
+            bne MENU
+            cmp #%00000010
+            beq WIN
+            cmp #%00000100
+            beq LOSE
+            ; cmp #%00001000
+            ; beq
+            rts
+        LOSE:
+            rts
+        WIN:
+            rts
         GAME:
-        jsr StatusBar::update
-        jsr Controller::read_joypad1
-        jsr Player::Movement::update
-        jsr Player::Attack::update
-        jsr Player::Sprite::update
-        rts
-        end_game:
-            jsr Game::draw_win_screen
-        END:
+            ; jsr Controller::read_joypad1
+            jsr Player::Movement::update
+            jsr Player::Attack::update
+            jsr Player::Sprite::update
+            jsr StatusBar::update
+            rts
+        MENU: 
+            lda #BUTTON_START
+            and Controller::pressed
+            bne start_game
+            rts
+                
+        
+    .endproc
 
+    .proc start_game
+        change_state #%00000001
         rts
     .endproc
 
+    .proc changed_state
+            ldx #$00
+            stx PPU_CTRL
+            stx PPU_MASK
+            jsr clear_nametable
+            VramReset
+            ; Turn off Changed Bit
+            lda $AC
+            eor #%10000000
+            sta $AC
+            ; lda $AC
+            ; Check other bits for State
+            cmp #%00000000
+            beq CHANGEMENU
+
+            cmp #%00000001
+            beq CHANGEGAME
+
+            cmp #%00000010
+            beq CHANGEWIN
+
+            cmp #%00000100
+            beq CHANGELOSE
+
+            ; cmp #%00001000
+            ; beq
+            ; Update Screens
+            rts
+        CHANGEGAME:      
+            jsr Game::draw_game_screen
+            lda #%10010001
+            sta PPU_CTRL
+            lda #%00011110
+            sta PPU_MASK
+            SetRenderFlag
+            rts
+        CHANGEMENU:
+            jsr Game::draw_start_screen
+            lda #%10010000
+            sta PPU_CTRL
+            lda #%00011110
+            sta PPU_MASK
+            SetRenderFlag
+            rts
+        CHANGEWIN:
+            jsr Game::draw_win_screen
+            lda #%10010010
+            sta PPU_CTRL
+            lda #%00011110
+            sta PPU_MASK
+            SetRenderFlag
+            rts
+        CHANGELOSE:
+            lda #%10010011
+            sta PPU_CTRL
+            lda #%00011110
+            sta PPU_MASK
+            SetRenderFlag
+            rts
+    .endproc
+
+    .proc clear_nametable
+        lda PPU_STATUS         
+        lda #$20               
+        sta PPU_ADDR
+        lda #$00
+        sta PPU_ADDR
+  
+                            
+        lda #0
+        ldy #30                
+        rowloop:
+            ldx #32            
+            columnloop:
+                sta PPU_DATA
+                dex
+                bne columnloop
+            dey
+            bne rowloop
+    
+                                
+        ldx #64                
+        loop:
+            sta PPU_DATA
+            dex
+            bne loop
+        rts
+    .endproc
 
     .proc render_loop
         ; Transfer Sprites via OAM
@@ -178,8 +282,6 @@
         sta OAM_ADDR
         lda #$02
         sta OAM_DMA
-
-        ; .include "./STATE/controller.s"
         
         ; Reset the VRAM address
         VramReset

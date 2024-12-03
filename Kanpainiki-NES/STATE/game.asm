@@ -8,6 +8,8 @@
   .include "./graphics/palette.s"
 
   .proc init
+    lda #%00000000
+    sta $AC
     jsr init_palettes
     jsr init_nametable
     rts
@@ -42,6 +44,8 @@
 
   .proc init_nametable
     ; jsr draw_ground
+    jsr draw_game_screen
+    VramReset
     jsr draw_start_screen
     VramReset
     rts
@@ -59,8 +63,7 @@
   .endproc
   
   .proc draw_start_screen
-    VramColRow 0, 0, NAMETABLE_B
-   
+    VramColRow 0, 0, NAMETABLE_A
 
     TOPBLANK:
       lda #$45
@@ -133,7 +136,7 @@
 
 
     ; LOAD ATTRIBUTES
-    lda PPU_STATUS
+    ; lda PPU_STATUS
     ldx #00
     attributeloop:
       lda attribute, x 
@@ -186,7 +189,32 @@
   .endproc
   
   .proc draw_game_screen
-    VramColRow 0, 23, NAMETABLE_A
+    VramColRow 0, 0, NAMETABLE_B
+    lda #$48
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    jsr ppu_full_line
+    
     lda #$45
     jsr ppu_full_line
     sta PPU_DATA
@@ -245,15 +273,20 @@
     jsr ppu_fill_line
     lda #$45
     jsr ppu_full_line
-    lda #$45
     jsr ppu_full_line
-    lda #$45
     jsr ppu_full_line
+    ldy #00
+    attributeloop:
+      lda #%01010101
+      sta PPU_DATA
+      dey
+      cpy #64
+      bne attributeloop
     rts
   .endproc
 
   .proc draw_win_screen
-    VramColRow 0, 0, NAMETABLE_B
+    VramColRow 0, 0, NAMETABLE_C
     lda #$45
     jsr ppu_full_line
     jsr ppu_full_line
@@ -286,32 +319,41 @@
     jsr ppu_full_line
     ; jsr ppu_full_line
     ; jsr ppu_full_line
-    VramReset
     rts
   .endproc
 
-  .proc check_state
-    lda $AC
-    cmp #0
-    beq game
-    cmp #1
-    beq win
-    cmp #2
-    beq lose
-    ; else
-    start:
+
+  .macro change_state state
+    lda #00
+    sta $AC
+    clc
+    adc #%10000000
+    adc state
+    sta $AC
+
+    ; beq game
+    ; cmp #1
+    ; beq win
+    ; cmp #2
+    ; beq lose
+    ; ; else
+    ; start:
     
-      rts
-    game:
+    ;   rts
+    ; game:
     
-      rts
-    win:
+    ;   rts
+    ; win:
+
+    ;   rts
+    ; lose:
 
       rts
-    lose:
+  .endmacro
 
-      rts
-  .endproc
+  .macro RNG
+    
+  .endmacro
 
 .endscope
 

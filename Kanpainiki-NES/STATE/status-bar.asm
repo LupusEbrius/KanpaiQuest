@@ -37,8 +37,7 @@
         cpy #00
         beq end_game
         end_game:
-            LDA #1
-            STA $AC
+            change_state #2
             rts
         save:
         rts

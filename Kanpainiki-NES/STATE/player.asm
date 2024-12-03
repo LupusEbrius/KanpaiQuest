@@ -24,7 +24,8 @@
     idleTimer         = $3F
 
     ProjectileNum     = $43
-    PlayerSprites     = $44
+    ProjectileTimer   = $44
+    anmFrameBrick     = $45
 
     .scope Initial
         SpriteX = 0
@@ -37,6 +38,7 @@
         positionY_HI = $08
         anmFrameTail = 0
         animationTimer = 0
+        ProjectileTimer = 0
     .endscope
 
     .enum Heading
@@ -61,6 +63,7 @@
         jsr init_x
         jsr init_y
         jsr init_sprites
+        ; jsr init_bricks
     .endproc
 
     .proc init_x
@@ -104,10 +107,18 @@
             clc
             adc #6
             sta sprite_num
-            sta PlayerSprites
             rts
     .endproc
     
+    .proc init_bricks
+        ldx #0
+        loop:
+        
+          
+          cpx #4
+          bne loop
+        rts
+    .endproc
 ; Calculates where the sprites should go based on player inputs
     .scope Movement 
         .proc update
@@ -455,6 +466,16 @@
     .scope Attack
 
         .proc update
+            jsr update_thrown_bricks
+            jsr attack_updated
+            jsr update_cooldown
+            ; jsr check_brick_ceiling
+            ; jsr check_brick_collision
+            ; jsr check_brick_counter
+            rts
+        .endproc
+        
+        .proc attack
             ldx #0
             lda #BUTTON_A
             and Controller::pressed
@@ -465,34 +486,236 @@
                 cmp #04
                 bne @spawn_brick
                 rts
-            ; Create a Brick Sprite that moves in a straight line until address $000F
-            ; has a non Zero value for every time player presses A
+            ; Create a Brick Sprite that moves in a straight line
             @spawn_brick: 
+                lda ProjectileTimer
+                cmp #0
+                bne skip
+                lda #15
+                sta ProjectileTimer
+                lda #6
+                asl
+                asl
+                tay
+                ldx #0
+                loop:
+                    lda $0200, y
+                    cmp #$EF
+                    bne no_update
+                    lda SpriteY
+                    sta $0200, y
+                    iny
+                    lda BRICK
+                    sta $0200, y
+                    iny
+                    lda #$02
+                    sta $0200, y
+                    iny
+                    lda SpriteX
+                    sta $0200, y
+                    no_update:
+                    inx
+                    iny
+                    iny
+                    iny
+                    iny
+                    cpx #4
+                    bne loop
                 inc ProjectileNum
+                inc sprite_num
+                skip:
+                ; dec ProjectileTimer
+            rts
+        .endproc
+      
+        .proc update_cooldown
+            lda ProjectileTimer
+            cmp #0
+            beq zeroed
+            dec ProjectileTimer
+            zeroed:
+            rts
+        .endproc
+
+        .proc attack_updated
+            ldx #0
+            lda #BUTTON_A
+            and Controller::down
+            bne @check_brick_limit
+            rts
+            @check_brick_limit:
                 lda ProjectileNum
-                tay
-                dey
-                ldx #04
-                stx $0C, y
-                lda sprite_num
+                cmp #04
+                bne @spawn_brick
+                rts
+            ; Create a Brick Sprite that moves in a straight line
+            @spawn_brick: 
+                lda ProjectileTimer
+                cmp #0
+                bne skip
+                lda #15
+                sta ProjectileTimer
+                lda #6
                 asl
                 asl
                 tay
-                lda SpriteY
-                sta $0200, y
-                iny
-                lda BRICK
-                sta $0200, y
-                iny
-                lda #$02
-                sta $0200, y
-                iny
-                lda SpriteX
-                sta $0200, y
-                lda sprite_num
+                ldx #0
+                loop:
+                    lda $0200, y
+                    cmp #$EF
+                    bne no_update
+                    lda SpriteY
+                    sta $0200, y
+                    iny
+                    lda BRICK
+                    sta $0200, y
+                    iny
+                    lda #$02
+                    sta $0200, y
+                    iny
+                    lda SpriteX
+                    sta $0200, y
+                    no_update:
+                    inx
+                    iny
+                    iny
+                    iny
+                    iny
+                    cpx #4
+                    bne loop
+
+                inc ProjectileNum
+                inc sprite_num
+                skip:
+                dec ProjectileTimer
+            rts
+        .endproc
+
+        .proc update_thrown_bricks 
+            ; check if projectile is active
+            ldy #0
+            ldx #0
+            loop:
+              lda #6
+              clc
+              stx $0A
+              adc $0A
+              asl
+              asl
+              tay
+              lda $0200, y
+              cmp #$EF
+              beq skip
+              sec
+              sbc #2
+              sta $0200, y
+              cmp #4
+              bcc despawn_brick
+              skip:
+              inx
+              cpx #4
+              bne loop
+            rts
+        .endproc
+
+        .proc check_brick_collision
+            ldx #0
+            ldy #0
+            loop:
+              lda #6
+              clc
+              stx $0A
+              adc $0A
+              asl
+              asl
+              tay
+              lda $0200, y
+              cmp #$EF
+              bne checkbrick
+              inx
+              cpx #4
+              bne loop
+            rts           
+            checkbrick:
+                ; lda #6
+                ; clc
+                ; stx $0A
+                ; adc $0A
+                ; asl
+                ; asl
+                ; tay
+                ; lda $0200, y
+                ; lda $1C, x
+                cmp #4
+                bcc despawn_brick
+                inx
+                cpx #4
+                bne loop
+            rts
+        .endproc
+
+        .proc check_brick_ceiling
+            ldy #0
+            ldx #0
+            loop:
+                lda #6
                 clc
-                adc #1
-                sta sprite_num
+                stx $0A
+                adc $0A
+                asl
+                asl
+                tay
+                lda $0200, y
+                cmp #$EF
+                beq skip
+                cmp #4
+                bcc despawn_brick
+                skip:
+                inx
+                cpx #4
+                bne loop
+            rts 
+        .endproc
+
+        .proc despawn_brick
+            lda #$EF
+            sta $0200, y
+            lda #$00
+            dec ProjectileNum
+            dec sprite_num   
+            rts
+        .endproc
+
+        .proc check_brick_counter
+            ldy #0
+            ldx #0
+            stx $0C
+            loop:
+              lda #6
+              clc
+              stx $0A
+              adc $0A
+              asl
+              asl
+              tay
+              lda $0200, y
+              cmp #$EF
+              beq skip
+              inc $0C
+              skip:
+              inx
+              cpx #4
+              bne loop
+            lda ProjectileNum
+            cmp $0C
+            beq normalized
+            lda sprite_num
+            sec
+            sbc ProjectileNum
+            sta sprite_num
+            lda $0C
+            sta ProjectileNum
+            normalized:
             rts
         .endproc
     .endscope
@@ -502,13 +725,15 @@
             jsr update_animations
             jsr update_tiles
             jsr update_sprite_position
-            jsr update_thrown_bricks
-            jsr check_brick_collision
+
             rts
         .endproc
 
         .proc update_animations
             jsr tail_wag
+            ; jsr ear_twitch
+            ; jsr leg_move
+            ; jsr brick_spin
             rts
         .endproc
 
@@ -540,6 +765,26 @@
 
             rts
         .endproc 
+
+        .proc brick_spin
+
+            ; loop:
+            ;   lda animationTimer
+            ;   eor #28
+            ;   cmp #3
+            ;   bne skip
+            ;   ldx anmFrameBrick
+            ;   inx
+            ;   cpx #4
+            ;   bne @save
+            ;   ldx #0
+            ;   @save:
+            ;       stx anmFrameBrick
+            ;       lda BRICK, x
+            ;       sta $0200, y
+            ; cpy #
+            ; bne loop
+        .endproc
  
         .proc update_sprite_position            
             lda SpriteX
@@ -576,76 +821,7 @@
             Y_REL:
                 .byte 0, 0, 8, 8, 10, 15
         .endproc 
- 
-        .proc update_thrown_bricks 
 
-            ; check if projectile is active
-            ldy #0
-            ldx #0
-            loop:
-              lda $0C, x
-              cmp #4
-              beq movebrick
-              inx
-              cpx #4
-              bne loop
-              rts           
-              movebrick:
-                  lda PlayerSprites
-                  clc
-                  stx $0A
-                  adc $0A
-                  asl
-                  asl
-                  tay
-                  lda $0200, y
-                  sec
-                  sbc #4
-                  sta $0200, y         
-                  inx
-                  cpx #4
-                  bne loop
-
-            rts
-
-        .endproc
-
-        .proc check_brick_collision
-            loop:
-            lda $0C, x
-            cmp #4
-            beq checkbrick
-            inx
-            cpx #4
-            bne loop
-            rts           
-            checkbrick:
-                lda PlayerSprites
-                clc
-                stx $0A
-                adc $0A
-                asl
-                asl
-                tay
-                lda $0200, y
-                cmp #4
-                bcc @despawn
-                inx
-                cpx #4
-                bne loop
-                rts
-                @despawn:
-                    lda #$FF
-                    sta $0200, y
-                    lda #$00
-                    sta $0C, x
-                    dec ProjectileNum
-                    dec sprite_num     
-                    inx
-                    cpx #4
-                    bne loop
-            rts
-        .endproc   
     .endscope
 
 .endscope

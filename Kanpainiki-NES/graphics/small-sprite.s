@@ -19,12 +19,12 @@
 
 SPRITENEW:
     ;Y POS, SPRITE ADDRESS, ATTR, X POS
-    .byte $40, $20, $40, $40
-    .byte $40, $20, $00, $48
-    .byte $48, $21, $00, $48
-    .byte $48, $21, $40, $40
-    .byte $50, $40, $00, $44
-    .byte $4F, $50, $00, $3F
+    .byte $EF, $20, $40, $40
+    .byte $EF, $20, $00, $48
+    .byte $EF, $21, $00, $48
+    .byte $EF, $21, $40, $40
+    .byte $EF, $40, $00, $44
+    .byte $EF, $50, $00, $3F
 
 SPRITEWALK:
     .byte $48, $40, $00, $48
@@ -47,10 +47,10 @@ TAIL:
     .byte $52; FRAME 3
 
 BRICK:
-    .byte $60, $00; FRAME 1
-    .byte $61, $00; FRAME 2
-    .byte $62, $00; FRAME 3
-    .byte $61, $40; FRAME 4
+    .byte $60; FRAME 1
+    .byte $61; FRAME 2
+    .byte $62; FRAME 3
+    .byte $61; FRAME 4
 
 BRICKS:
     ;Y POS, SPRITE ADDRESS, ATTR, X POS
